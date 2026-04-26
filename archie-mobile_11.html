@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Moxcoin">
+<title>Moxcoin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#0D0D0D;color:#fff;font-size:16px;overscroll-behavior:none;}
+
+/* ── CSS tokens ── */
+:root{
+  --green:#A8E63C;
+  --green-dark:#1A2800;
+  --green-mid:#3B6D11;
+  --yellow:#E8D800;
+  --yellow-dark:#3A3000;
+  --black:#0D0D0D;
+  --surface:#181818;
+  --surface2:#222;
+  --surface3:#2A2A2A;
+  --text:#fff;
+  --text2:rgba(255,255,255,.65);
+  --text3:rgba(255,255,255,.35);
+  --red:#E24B4A;
+  --blue:#5B9BD5;
+  --r-sm:12px;
+  --r-md:18px;
+  --r-lg:24px;
+  --r-xl:32px;
+}
+
+/* ── Layout shell ── */
+#app{height:100vh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative;}
+
+/* ── Status bar ── */
+.status-bar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.status-bar span{font-size:13px;font-weight:500;color:var(--text);}
+.status-icons{display:flex;gap:6px;align-items:center;}
+
+/* ── Scrollable content ── */
+.page{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:y proximity;padding-bottom:8px;}
+.page::-webkit-scrollbar{display:none;}
+
+/* ── Bottom nav ── */
+.bottom-nav{background:var(--surface);border-top:0.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-around;padding:8px 8px 0;padding-bottom:max(env(safe-area-inset-bottom),16px);flex-shrink:0;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 16px;border-radius:var(--r-sm);cursor:pointer;transition:background .15s;}
+.nav-item.active .nav-icon{color:var(--green);}
+.nav-item.active .nav-label{color:var(--green);}
+.nav-icon{width:22px;height:22px;color:var(--text3);}
+.nav-label{font-size:10px;font-weight:500;color:var(--text3);}
+
+/* ── Cards ── */
+.card{background:var(--surface);border-radius:var(--r-lg);padding:18px;}
+.card-yellow{background:var(--yellow);border-radius:var(--r-lg);padding:18px;}
+.card-green{background:var(--green);border-radius:var(--r-lg);padding:18px;}
+
+/* ── Section header ── */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.sec-title{font-size:15px;font-weight:600;color:var(--text);}
+.sec-link{font-size:13px;font-weight:500;color:var(--green);}
+
+/* ── Screen pages ── */
+.screen{display:none;flex-direction:column;gap:0;}
+.screen.active{display:flex;}
+
+/* ── Animations ── */
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barIn{from{width:0}to{width:var(--w)}}
+@keyframes needleIn{from{transform:rotate(-120deg)}to{transform:rotate(var(--deg))}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes countUp{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+.slide-up{animation:slideUp .4s cubic-bezier(.22,.68,0,1.2) both;}
+.slide-up.d1{animation-delay:.05s}.slide-up.d2{animation-delay:.1s}.slide-up.d3{animation-delay:.15s}
+.slide-up.d4{animation-delay:.2s}.slide-up.d5{animation-delay:.25s}.slide-up.d6{animation-delay:.3s}
+.bar-anim{animation:barIn .8s cubic-bezier(.22,.68,0,1.2) both;animation-delay:.2s;}
+.count-up{animation:countUp .5s cubic-bezier(.22,.68,0,1.2) both;animation-delay:.1s;}
+
+/* ── PIN screen ── */
+#pin-screen{position:absolute;inset:0;background:var(--black);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
+.pin-logo{font-size:32px;font-weight:600;letter-spacing:-1px;color:var(--text);}.pin-logo span{color:var(--green);}
+.pin-logo span{color:var(--green);}
+.pin-subtitle{font-size:14px;color:var(--text3);}
+.pin-dots{display:flex;gap:16px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--text3);transition:all .2s;}
+.pin-dot.filled{background:var(--green);border-color:var(--green);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:260px;}
+.pin-key{height:64px;background:var(--surface);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;cursor:pointer;transition:background .1s,transform .1s;-webkit-user-select:none;user-select:none;}
+.pin-key:active{background:var(--surface3);transform:scale(.95);}
+.pin-key.zero{grid-column:2;}
+.pin-key.del{background:transparent;font-size:16px;color:var(--text2);}
+
+/* ── Greeting banner ── */
+.greeting-card{background:linear-gradient(135deg,#131D00,#1A2800);border-radius:var(--r-lg);padding:20px;position:relative;overflow:hidden;}
+.greeting-card::after{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(168,230,60,.07);}
+.greeting-title{font-size:13px;color:rgba(168,230,60,.6);margin-bottom:4px;}
+.greeting-name{font-size:22px;font-weight:600;color:var(--green);letter-spacing:-.5px;}
+.greeting-sub{font-size:12px;color:rgba(168,230,60,.45);margin-top:2px;}
+
+/* ── Balance hero ── */
+.balance-label{font-size:12px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px;}
+.balance-amount{font-size:38px;font-weight:600;color:var(--text);letter-spacing:-1.5px;line-height:1;}
+.balance-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+.badge-green{background:var(--green);color:var(--green-dark);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge-red{background:#2A0000;color:var(--red);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+
+/* ── Action buttons ── */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.action-btn{border-radius:var(--r-md);padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .1s;-webkit-user-select:none;user-select:none;}
+.action-btn:active{transform:scale(.97);}
+.action-btn-dark{background:var(--surface);}
+.action-btn-yellow{background:var(--yellow);}
+.action-btn-green{background:var(--green);}
+.action-btn span{font-size:13px;font-weight:500;}
+.action-btn-dark span{color:var(--text2);}
+.action-btn-yellow span{color:var(--yellow-dark);}
+.action-btn-green span{color:var(--green-dark);}
+
+/* ── Stat pills row ── */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-pill{background:var(--surface);border-radius:var(--r-md);padding:14px;}
+.stat-lbl{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.stat-val{font-size:18px;font-weight:600;color:var(--text);}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* ── Bar track ── */
+.bar-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:8px;}
+.bar-fill{height:4px;border-radius:2px;}
+
+/* ── Transaction rows ── */
+.txn-list{display:flex;flex-direction:column;gap:0;}
+.txn-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid rgba(255,255,255,.05);}
+.txn-row:last-child{border-bottom:none;}
+.txn-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+.txn-name{font-size:13px;font-weight:500;color:var(--text);}
+.txn-date{font-size:11px;color:var(--text3);}
+.txn-amount{font-size:13px;font-weight:600;margin-left:auto;flex-shrink:0;}
+.txn-positive{color:var(--green);}
+.txn-negative{color:var(--red);}
+
+/* ── Gauge ── */
+.gauge-wrap{position:relative;height:110px;display:flex;align-items:flex-end;justify-content:center;}
+.gauge-wrap svg{overflow:visible;}
+.needle-el{transform-origin:86px 82px;}
+
+/* ── Holdings list ── */
+.holding-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--r-md);margin-bottom:8px;}
+.holding-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;}
+.holding-name{font-size:13px;font-weight:500;color:var(--text);}
+.holding-qty{font-size:11px;color:var(--text3);}
+.holding-val{font-size:13px;font-weight:600;color:var(--text);margin-left:auto;}
+.holding-chg{font-size:11px;font-weight:500;}
+
+/* ── Sparkline ── */
+.sparkline-wrap{height:70px;width:100%;}
+
+/* ── Input styles ── */
+.field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+.field-input{background:var(--surface2);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r-sm);padding:14px 16px;font-size:16px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .15s;}
+.field-input:focus{border-color:rgba(168,230,60,.5);}
+.btn-primary{background:var(--green);color:var(--green-dark);border:none;border-radius:var(--r-md);padding:16px;font-size:15px;font-weight:600;width:100%;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform .1s;}
+.btn-primary:active{transform:scale(.98);}
+.btn-secondary{background:var(--surface);color:var(--text);border:none;border-radius:var(--r-md);padding:14px;font-size:14px;font-weight:500;width:100%;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.select-input{background:var(--surface2);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r-sm);padding:14px 16px;font-size:16px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;width:100%;-webkit-appearance:none;}
+.delete-btn{background:#2A0000;color:var(--red);border:none;border-radius:var(--r-sm);padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* ── Page padding wrapper ── */
+.pg{padding:16px;display:flex;flex-direction:column;gap:14px;}
+
+/* ── Modal sheet ── */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-end;}
+.sheet-overlay.open{display:flex;}
+.sheet{background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 20px 36px;width:100%;animation:slideUp .3s ease both;}
+.sheet-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 18px;}
+.sheet-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px;}
+
+/* ── Month tabs ── */
+.month-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.month-row::-webkit-scrollbar{display:none;}
+.month-tab{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s;}
+.month-tab.active{background:var(--green);color:var(--green-dark);}
+.month-tab:not(.active){background:var(--surface);color:var(--text3);}
+
+/* ── Toggle ── */
+.toggle-row{display:flex;background:var(--surface2);border-radius:var(--r-sm);padding:3px;}
+.toggle-btn{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;border-radius:9px;cursor:pointer;transition:all .15s;}
+.toggle-btn.active{background:var(--green);color:var(--green-dark);}
+.toggle-btn:not(.active){color:var(--text3);}
+
+/* ── Reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;}
+}
+
+/* Android gesture/button nav safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+}
+/* Fallback for Android with 3-button nav (~48px) */
+@media (display-mode: browser) {
+  .bottom-nav {
+    padding-bottom: 16px;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keyrune@latest/css/keyrune.min.css">
+</head>
+<body>
+
+<!-- ── PIN Screen ── -->
+<div id="pin-screen">
+  <div>
+    <div class="pin-logo">Mox<span>coin</span></div>
+  <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:-20px;letter-spacing:.5px;">cards · crypto · cash</div>
+    <div class="pin-subtitle" style="text-align:center;margin-top:4px;">Your collection. Your finances.</div>
+  </div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+    <div class="pin-dot" id="pd4"></div>
+    <div class="pin-dot" id="pd5"></div>
+  </div>
+  <div class="pin-pad">
+    <div class="pin-key" data-v="1">1</div><div class="pin-key" data-v="2">2</div><div class="pin-key" data-v="3">3</div>
+    <div class="pin-key" data-v="4">4</div><div class="pin-key" data-v="5">5</div><div class="pin-key" data-v="6">6</div>
+    <div class="pin-key" data-v="7">7</div><div class="pin-key" data-v="8">8</div><div class="pin-key" data-v="9">9</div>
+    <div class="pin-key zero" data-v="0">0</div>
+    <div class="pin-key del" data-v="del">⌫</div>
+  </div>
+  <div style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="unlock()">Skip (demo)</div>
+</div>
+
+<!-- ── App Shell ── -->
+<div id="app" style="display:none;">
+  <div class="status-bar">
+    <span id="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><rect x="0" y="3" width="3" height="7" rx="1" fill="rgba(255,255,255,.6)"/><rect x="4" y="2" width="3" height="8" rx="1" fill="rgba(255,255,255,.6)"/><rect x="8" y="0" width="3" height="10" rx="1" fill="rgba(255,255,255,.6)"/><rect x="12" y="1" width="2" height="9" rx="1" fill="rgba(255,255,255,.2)"/></svg>
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M7.5 2.5C9.8 2.5 11.9 3.6 13.2 5.3L11.5 6.7C10.6 5.7 9.1 5.1 7.5 5.1C5.9 5.1 4.4 5.7 3.5 6.7L1.8 5.3C3.1 3.6 5.2 2.5 7.5 2.5Z" fill="rgba(255,255,255,.6)"/><path d="M7.5 5.5C8.9 5.5 10.1 6.1 11 7.1L9.3 8.4C8.8 7.8 8.2 7.5 7.5 7.5C6.8 7.5 6.2 7.8 5.7 8.4L4 7.1C4.9 6.1 6.1 5.5 7.5 5.5Z" fill="rgba(255,255,255,.6)"/><circle cx="7.5" cy="10" r="1.2" fill="rgba(255,255,255,.6)"/></svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0" y="1" width="21" height="10" rx="2" stroke="rgba(255,255,255,.4)" stroke-width="1"/><rect x="1.5" y="2.5" width="14" height="7" rx="1" fill="rgba(255,255,255,.6)"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" fill="rgba(255,255,255,.4)"/></svg>
+    </div>
+  </div>
+
+  <div class="page" id="page-content">
+
+    <!-- ═══ HOME SCREEN ═══ -->
+    <div class="screen active" id="screen-home">
+      <div class="pg">
+
+        <!-- top nav row -->
+        <div style="display:flex;justify-content:space-between;align-items:center;" class="slide-up d1">
+          <div>
+            <div style="font-size:11px;color:var(--text3);">Good morning</div>
+            <div style="font-size:16px;font-weight:600;color:var(--text);" id="home-greeting">Aniduaza</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div id="currency-toggle" style="background:var(--surface);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--green);cursor:pointer;"></div>
+            <div style="width:36px;height:36px;border-radius:50%;background:#1A2800;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);">A</div>
+          </div>
+        </div>
+
+        <!-- balance hero -->
+        <div class="greeting-card slide-up d1">
+          <div class="greeting-title">Total assets</div>
+          <div class="balance-amount count-up" id="home-balance">—</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+            <div id="home-pl-badge"></div>
+            <div style="font-size:11px;color:rgba(168,230,60,.4);" id="home-date"></div>
+          </div>
+        </div>
+
+        <!-- action buttons -->
+        <div class="action-grid slide-up d2">
+          <div class="action-btn action-btn-dark" onclick="navTo('screen-income')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--green)" stroke-width="1.8"><path d="M11 3v16M4 10l7-7 7 7"/></svg>
+            <span>Income</span>
+          </div>
+          <div class="action-btn action-btn-yellow" onclick="navTo('screen-expenses')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--yellow-dark)" stroke-width="1.8"><path d="M11 19V3M4 12l7 7 7-7"/></svg>
+            <span style="color:var(--yellow-dark);">Expenses</span>
+          </div>
+          <div class="action-btn action-btn-dark" onclick="navTo('screen-savings')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--green)" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M11 7v4l3 3"/></svg>
+            <span>Savings</span>
+          </div>
+          <div class="action-btn action-btn-green" onclick="navTo('screen-portfolio')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--green-dark)" stroke-width="1.8"><path d="M2 18l5-6 4 3 5-7 4 4"/></svg>
+            <span style="color:var(--green-dark);">Portfolio</span>
+          </div>
+        </div>
+
+        <!-- stat pills -->
+        <div class="stat-row slide-up d3">
+          <div class="stat-pill">
+            <div class="stat-lbl">Net savings</div>
+            <div class="stat-val" id="home-savings">—</div>
+            <div class="stat-sub" id="home-savings-cur">/ month</div>
+            <div class="bar-track"><div class="bar-fill bar-anim" id="home-rate-bar" style="--w:0%;background:var(--green);"></div></div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-lbl">Savings rate</div>
+            <div class="stat-val" id="home-rate">—</div>
+            <div class="stat-sub">of income</div>
+          </div>
+        </div>
+
+        <!-- recent transactions -->
+        <div class="slide-up d4">
+          <div class="sec-hdr">
+            <span class="sec-title">Recent</span>
+            <span class="sec-link" onclick="navTo('screen-expenses')">See all</span>
+          </div>
+          <div class="card">
+            <div class="txn-list" id="home-txns"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ BUDGET SCREEN ═══ -->
+    <div class="screen" id="screen-budget">
+      <div class="pg">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;" class="slide-up d1">
+          <div style="font-size:18px;font-weight:600;">Monthly budget</div>
+          <div id="budget-month-lbl" style="font-size:12px;color:var(--text3);"></div>
+        </div>
+
+        <!-- gauge card -->
+        <div class="card-yellow slide-up d2">
+          <div style="font-size:12px;font-weight:500;color:var(--yellow-dark);margin-bottom:8px;">Spending limit</div>
+          <div class="gauge-wrap">
+            <svg width="172" height="90" viewBox="0 0 172 90" style="overflow:visible;">
+              <path d="M16 82 A70 70 0 0 1 156 82" stroke="#1A1200" stroke-width="10" stroke-linecap="round" fill="none" opacity=".18"/>
+              <path id="gauge-arc" d="M16 82 A70 70 0 0 1 156 82" stroke="#1A1200" stroke-width="10" stroke-linecap="round" fill="none" stroke-dasharray="220" stroke-dashoffset="220"/>
+              <line id="gauge-needle" x1="86" y1="82" x2="86" y2="24" stroke="#1A1200" stroke-width="3" stroke-linecap="round" transform="rotate(-120,86,82)"/>
+              <circle cx="86" cy="82" r="5" fill="#1A1200"/>
+              <text x="12" y="90" font-size="9" fill="var(--yellow-dark)" font-family="DM Sans,sans-serif">0</text>
+              <text x="148" y="90" font-size="9" fill="var(--yellow-dark)" font-family="DM Sans,sans-serif" id="gauge-max-lbl">12k</text>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;">
+            <div style="font-size:12px;color:var(--yellow-dark);" id="gauge-lbl">8,900 / 12,000</div>
+            <div style="font-size:32px;font-weight:600;color:#0D0D00;letter-spacing:-1px;" id="gauge-pct">74%</div>
+          </div>
+        </div>
+
+        <!-- income / expense -->
+        <div class="stat-row slide-up d3">
+          <div class="stat-pill">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.5" stroke="var(--green)" stroke-width="1"/><path d="M6 3v6M3 6l3-3 3 3" stroke="var(--green)" stroke-width="1.2"/></svg>
+              <span style="font-size:10px;color:var(--green);font-weight:500;">Income</span>
+            </div>
+            <div class="stat-val" id="bud-income">—</div>
+            <div class="stat-sub" id="bud-income-cur">/ month</div>
+          </div>
+          <div class="stat-pill">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.5" stroke="var(--red)" stroke-width="1"/><path d="M6 9V3M3 6l3 3 3-3" stroke="var(--red)" stroke-width="1.2"/></svg>
+              <span style="font-size:10px;color:var(--red);font-weight:500;">Expenses</span>
+            </div>
+            <div class="stat-val" id="bud-expenses">—</div>
+            <div class="stat-sub" id="bud-expenses-cur">/ month</div>
+          </div>
+        </div>
+
+        <!-- allocation bars -->
+        <div class="card slide-up d4">
+          <div class="sec-title" style="margin-bottom:14px;">Allocation</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:13px;color:var(--text2);">Essentials</span><span style="font-size:13px;font-weight:500;color:var(--red);" id="bud-ess-pct">—</span></div>
+              <div class="bar-track"><div class="bar-fill bar-anim" id="bud-ess-bar" style="--w:0%;background:var(--red);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:13px;color:var(--text2);">Subscriptions</span><span style="font-size:13px;font-weight:500;color:var(--yellow);" id="bud-sub-pct">—</span></div>
+              <div class="bar-track"><div class="bar-fill bar-anim" id="bud-sub-bar" style="--w:0%;background:var(--yellow);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:13px;color:var(--text2);">Savings</span><span style="font-size:13px;font-weight:500;color:var(--green);" id="bud-sav-pct">—</span></div>
+              <div class="bar-track"><div class="bar-fill bar-anim" id="bud-sav-bar" style="--w:0%;background:var(--green);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- portfolio daily -->
+        <div style="background:var(--yellow);border-radius:var(--r-lg);padding:16px;display:flex;align-items:center;justify-content:space-between;" class="slide-up d5">
+          <div>
+            <div style="font-size:11px;color:var(--yellow-dark);margin-bottom:3px;font-weight:500;">Portfolio today</div>
+            <div style="font-size:20px;font-weight:600;color:#0D0D00;" id="bud-pl">—</div>
+          </div>
+          <div style="background:#0D0D00;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--yellow)" stroke-width="1.8"><path d="M2 12l3.5-4 3 2.5 4-6"/></svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ PORTFOLIO SCREEN ═══ -->
+    <div class="screen" id="screen-portfolio">
+      <div class="pg">
+
+        <div style="font-size:18px;font-weight:600;" class="slide-up d1">Portfolio</div>
+
+        <!-- total + sparkline -->
+        <div class="card slide-up d2">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">Total value</div>
+              <div style="font-size:26px;font-weight:600;color:var(--text);letter-spacing:-.8px;" id="port-total">—</div>
+            </div>
+            <div id="port-pl-badge"></div>
+          </div>
+          <canvas id="sparkline-canvas" width="340" height="70" style="width:100%;height:70px;display:block;"></canvas>
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <div class="toggle-btn active" onclick="setRange(this,'3m')" style="flex:none;padding:5px 14px;font-size:11px;">3M</div>
+            <div class="toggle-btn" onclick="setRange(this,'6m')" style="flex:none;padding:5px 14px;font-size:11px;">6M</div>
+            <div class="toggle-btn" onclick="setRange(this,'1y')" style="flex:none;padding:5px 14px;font-size:11px;">1Y</div>
+          </div>
+        </div>
+
+        <!-- crypto holdings -->
+        <div class="slide-up d3">
+          <div class="sec-hdr">
+            <span class="sec-title">Crypto</span>
+            <span class="sec-link" onclick="openSheet('add-crypto')">+ Add</span>
+          </div>
+          <div id="crypto-list"></div>
+        </div>
+
+        <!-- collections -->
+        <div class="slide-up d4">
+          <div class="sec-hdr">
+            <span class="sec-title">Collections</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;" onclick="refreshAllCardPrices()">↻</span>
+              <span class="sec-link" onclick="openSheet('add-collection')">+ Add</span>
+            </div>
+          </div>
+          <div id="collection-list"></div>
+        </div>
+
+        <!-- savings accounts -->
+        <div class="slide-up d5">
+          <div class="sec-hdr">
+            <span class="sec-title">Savings</span>
+            <span class="sec-link" onclick="openSheet('add-savings')">+ Add</span>
+          </div>
+          <div id="savings-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ INCOME SCREEN ═══ -->
+    <div class="screen" id="screen-income">
+      <div class="pg">
+        <div style="display:flex;justify-content:space-between;align-items:center;" class="slide-up d1">
+          <div style="font-size:18px;font-weight:600;">Income</div>
+          <div class="badge-green" style="cursor:pointer;" onclick="openSheet('add-income')">+ Add</div>
+        </div>
+        <div class="card slide-up d2">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Monthly total</div>
+          <div style="font-size:28px;font-weight:600;color:var(--green);" id="income-total">—</div>
+        </div>
+        <div id="income-list" class="slide-up d3"></div>
+      </div>
+    </div>
+
+    <!-- ═══ EXPENSES SCREEN ═══ -->
+    <div class="screen" id="screen-expenses">
+      <div class="pg">
+        <div style="display:flex;justify-content:space-between;align-items:center;" class="slide-up d1">
+          <div style="font-size:18px;font-weight:600;">Expenses</div>
+          <div class="badge-green" style="cursor:pointer;" onclick="openSheet('add-expense')">+ Add</div>
+        </div>
+        <div class="stat-row slide-up d2">
+          <div class="stat-pill">
+            <div class="stat-lbl">Total</div>
+            <div class="stat-val" id="exp-total">—</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-lbl">vs income</div>
+            <div class="stat-val" id="exp-ratio" style="color:var(--red);">—</div>
+          </div>
+        </div>
+        <div id="expense-list" class="slide-up d3"></div>
+      </div>
+    </div>
+
+    <!-- ═══ SAVINGS SCREEN ═══ -->
+    <div class="screen" id="screen-savings">
+      <div class="pg">
+        <div style="display:flex;justify-content:space-between;align-items:center;" class="slide-up d1">
+          <div style="font-size:18px;font-weight:600;">Savings</div>
+          <div class="badge-green" style="cursor:pointer;" onclick="openSheet('add-savings')">+ Add</div>
+        </div>
+        <div class="card slide-up d2">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Total saved</div>
+          <div style="font-size:28px;font-weight:600;color:var(--blue);" id="sav-total">—</div>
+        </div>
+        <div id="savings-list-full" class="slide-up d3"></div>
+      </div>
+    </div>
+
+  </div><!-- end page -->
+
+  <!-- ── Bottom Nav ── -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
+      <svg class="nav-icon" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M8 20v-8h6v8"/></svg>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" id="nav-budget" onclick="switchTab('budget')">
+      <svg class="nav-icon" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M11 3C11 3 15 7 15 11S11 19 11 19"/><path d="M3 11h16"/></svg>
+      <span class="nav-label">Budget</span>
+    </div>
+    <div class="nav-item" id="nav-portfolio" onclick="switchTab('portfolio')">
+      <svg class="nav-icon" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 18l5-6 4 3 5-7 4 4"/></svg>
+      <span class="nav-label">Portfolio</span>
+    </div>
+    <div class="nav-item" id="nav-income" onclick="switchTab('income')">
+      <svg class="nav-icon" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3v16M4 10l7-7 7 7"/></svg>
+      <span class="nav-label">Income</span>
+    </div>
+    <div class="nav-item" id="nav-expenses" onclick="switchTab('expenses')">
+      <svg class="nav-icon" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="18" height="14" rx="2"/><path d="M16 5V3H6v2"/><path d="M8 12h6M8 15h4"/></svg>
+      <span class="nav-label">Expenses</span>
+    </div>
+  </div>
+
+  <!-- ── Bottom Sheets ── -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet(event)">
+    <div class="sheet" id="sheet-content" onclick="e=>e.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheet-title"></div>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const STORAGE_KEY='moxcoin_v1';
+const AED_TO_USD=0.2723, AED_TO_PHP=15.8;
+const PIN='241424';
+const CURRENCIES=['AED','USD','PHP'];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let data={
+  currency:'AED',
+  hidden:false,
+  incomeSources:[],
+  expenses:[],
+  cryptoHoldings:[],
+  mtgCards:[],
+  pokemonCards:[],
+  savingsAccounts:[],
+};
+let currentTab='home';
+let currentRange='3m';
+let pinEntry='';
+let cryptoCache={};
+let cryptoChangeCache={};
+
+// ── Persistence ────────────────────────────────────────────────────────────
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const d=JSON.parse(raw);Object.assign(data,d);}
+  }catch(e){}
+}
+
+// ── Formatting ─────────────────────────────────────────────────────────────
+function toDisplay(aed){
+  if(data.currency==='USD')return aed*AED_TO_USD;
+  if(data.currency==='PHP')return aed*AED_TO_PHP;
+  return aed;
+}
+function fmt(aed,dec=0){
+  if(data.hidden)return '——';
+  const v=toDisplay(aed);
+  return v.toLocaleString('en',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function curSym(){return data.currency;}
+
+// ── Computed ───────────────────────────────────────────────────────────────
+function totalIncome(){return data.incomeSources.reduce((s,x)=>s+x.amt,0);}
+function totalExpenses(){return data.expenses.reduce((s,x)=>s+x.amt,0);}
+function totalSavings(){return data.savingsAccounts.reduce((s,x)=>s+x.balance,0);}
+function netSavings(){return totalIncome()-totalExpenses();}
+function savingsRate(){const i=totalIncome();return i>0?Math.round(netSavings()/i*100):0;}
+function totalAssets(){
+  let t=totalSavings();
+  data.cryptoHoldings.forEach(h=>{
+    const p=cryptoCache[h.id];
+    if(p)t+=h.qty*p*3.6725;
+    else t+=h.costBasis||0;
+  });
+  data.mtgCards.forEach(c=>t+=(c.currentPrice||c.addedPrice||0));
+  data.pokemonCards.forEach(c=>t+=(c.currentPrice||c.addedPrice||0));
+  return t;
+}
+function calcBudget(){
+  const inc=totalIncome();
+  const subs=data.expenses.filter(e=>e.cat==='sub').reduce((s,e)=>s+e.amt,0);
+  const ess=data.expenses.filter(e=>e.cat!=='sub').reduce((s,e)=>s+e.amt,0);
+  const tot=subs+ess;
+  const rate=inc>0?Math.round(netSavings()/inc*100):0;
+  return{inc,subs,ess,tot,rate,sav:netSavings()};
+}
+
+// ── PIN Logic ──────────────────────────────────────────────────────────────
+function handlePin(v){
+  if(v==='del'){pinEntry=pinEntry.slice(0,-1);}
+  else if(pinEntry.length<6){pinEntry+=v;}
+  for(let i=0;i<6;i++){
+    const d=document.getElementById('pd'+i);
+    d.classList.toggle('filled',i<pinEntry.length);
+  }
+  if(pinEntry.length===6){
+    if(pinEntry===PIN){setTimeout(unlock,200);}
+    else{pinEntry='';for(let i=0;i<6;i++)document.getElementById('pd'+i).classList.remove('filled');}
+  }
+}
+function unlock(){
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  renderAll();
+  fetchCryptoPrices();
+}
+document.querySelectorAll('.pin-key').forEach(k=>{
+  k.addEventListener('click',()=>handlePin(k.dataset.v));
+});
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  currentTab=tab;
+  renderTab(tab);
+}
+function navTo(screenId){
+  const tab=screenId.replace('screen-','');
+  switchTab(tab);
+}
+
+function renderTab(tab){
+  if(tab==='home')renderHome();
+  else if(tab==='budget')renderBudget();
+  else if(tab==='portfolio')renderPortfolio();
+  else if(tab==='income')renderIncome();
+  else if(tab==='expenses')renderExpenses();
+  else if(tab==='savings')renderSavingsTab();
+}
+
+// ── Render All ──────────────────────────────────────────────────────────────
+function renderAll(){renderHome();updateCurrencyToggle();}
+
+function updateCurrencyToggle(){
+  const el=document.getElementById('currency-toggle');
+  if(el)el.textContent=data.currency;
+}
+
+// ── HOME ───────────────────────────────────────────────────────────────────
+function renderHome(){
+  const assets=totalAssets();
+  const b=calcBudget();
+  const el=document.getElementById('home-balance');
+  if(el)el.textContent=fmt(assets)+' '+curSym();
+  const dateEl=document.getElementById('home-date');
+  if(dateEl){const n=new Date();dateEl.textContent=n.toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short'});}
+  const plEl=document.getElementById('home-pl-badge');
+  if(plEl){
+    const plPct=(Math.random()*4-1).toFixed(2);
+    const up=parseFloat(plPct)>=0;
+    plEl.innerHTML=`<div class="${up?'badge-green':'badge-red'}">${up?'▲':'▼'} ${Math.abs(plPct)}% today</div>`;
+  }
+  const savEl=document.getElementById('home-savings');
+  if(savEl)savEl.textContent=fmt(b.sav)+' '+curSym();
+  const rateEl=document.getElementById('home-rate');
+  if(rateEl)rateEl.textContent=b.rate+'%';
+  const barEl=document.getElementById('home-rate-bar');
+  if(barEl){barEl.style.setProperty('--w',Math.max(0,Math.min(100,b.rate))+'%');barEl.style.width=Math.max(0,Math.min(100,b.rate))+'%';}
+  renderHomeTxns();
+}
+
+function renderHomeTxns(){
+  const el=document.getElementById('home-txns');
+  if(!el)return;
+  const recent=data.expenses.slice(-4).reverse();
+  if(!recent.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No transactions yet</div>';return;}
+  el.innerHTML=recent.map(e=>`
+    <div class="txn-row">
+      <div class="txn-avatar" style="background:#2A0000;color:var(--red);">${e.name.slice(0,2).toUpperCase()}</div>
+      <div><div class="txn-name">${e.name}</div><div class="txn-date">${e.cat==='sub'?'Subscription':'Essential'}</div></div>
+      <div class="txn-amount txn-negative">−${fmt(e.amt)}</div>
+    </div>`).join('');
+}
+
+// ── BUDGET ─────────────────────────────────────────────────────────────────
+function renderBudget(){
+  const b=calcBudget();
+  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  setT('bud-income',fmt(b.inc)+' '+curSym());
+  setT('bud-expenses',fmt(b.tot)+' '+curSym());
+  setT('bud-pl','+'+(Math.random()*500+100).toFixed(0)+' '+curSym());
+  const limit=Math.max(b.inc,b.tot*1.2,1000);
+  const pct=Math.min(100,Math.round(b.tot/limit*100));
+  setT('gauge-pct',pct+'%');
+  setT('gauge-lbl',fmt(b.tot)+' / '+fmt(limit));
+  setT('gauge-max-lbl',fmt(limit/1000,0)+'k');
+  const arc=document.getElementById('gauge-arc');
+  if(arc){const dash=220*(pct/100);setTimeout(()=>{arc.style.transition='stroke-dashoffset 1s cubic-bezier(.22,.68,0,1.2)';arc.style.strokeDashoffset=220-dash;},100);}
+  const needle=document.getElementById('gauge-needle');
+  if(needle){const deg=-120+(pct/100)*120;setTimeout(()=>{needle.setAttribute('transform',`rotate(${deg},86,82)`);},100);}
+  const inc=b.inc||1;
+  const essPct=Math.round(b.ess/inc*100);
+  const subPct=Math.round(b.subs/inc*100);
+  const savPct=Math.max(0,Math.round(b.sav/inc*100));
+  setT('bud-ess-pct',essPct+'%'); setBW('bud-ess-bar',essPct);
+  setT('bud-sub-pct',subPct+'%'); setBW('bud-sub-bar',subPct);
+  setT('bud-sav-pct',savPct+'%'); setBW('bud-sav-bar',savPct);
+  const mEl=document.getElementById('budget-month-lbl');
+  if(mEl){const n=new Date();mEl.textContent=n.toLocaleDateString('en',{month:'long',year:'numeric'});}
+}
+function setBW(id,pct){
+  const el=document.getElementById(id);
+  if(el){el.style.setProperty('--w',Math.max(0,Math.min(100,pct))+'%');setTimeout(()=>{el.style.width=Math.max(0,Math.min(100,pct))+'%';},50);}
+}
+
+// ── PORTFOLIO ──────────────────────────────────────────────────────────────
+function renderPortfolio(){
+  const total=totalAssets();
+  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  setT('port-total',fmt(total)+' '+curSym());
+  const plEl=document.getElementById('port-pl-badge');
+  if(plEl){const p=(Math.random()*4-1).toFixed(2);const up=parseFloat(p)>=0;plEl.innerHTML=`<div class="${up?'badge-green':'badge-red'}">${up?'+':''}${p}%</div>`;}
+  drawSparkline();
+  renderCryptoList();
+  renderCollectionList();
+  renderSavingsPortfolio();
+}
+
+function drawSparkline(){
+  const canvas=document.getElementById('sparkline-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||340, H=70;
+  canvas.width=W*2;canvas.height=H*2;ctx.scale(2,2);
+  ctx.clearRect(0,0,W,H);
+  const pts=[];
+  for(let i=0;i<20;i++)pts.push(20+Math.random()*40+(i/20)*20);
+  const mn=Math.min(...pts)-5,mx=Math.max(...pts)+5;
+  const x=i=>i/(pts.length-1)*W;
+  const y=v=>H-(v-mn)/(mx-mn)*H*0.85-H*0.05;
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(168,230,60,.25)');
+  grad.addColorStop(1,'rgba(168,230,60,0)');
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));
+  pts.forEach((p,i)=>{if(i>0)ctx.lineTo(x(i),y(p));});
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));
+  pts.forEach((p,i)=>{if(i>0)ctx.lineTo(x(i),y(p));});
+  ctx.strokeStyle='#A8E63C';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(x(pts.length-1),y(pts[pts.length-1]),4,0,Math.PI*2);
+  ctx.fillStyle='#A8E63C';ctx.fill();
+}
+
+function renderCryptoList(){
+  const el=document.getElementById('crypto-list');
+  if(!el)return;
+  if(!data.cryptoHoldings.length){el.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No holdings yet</div>';return;}
+  el.innerHTML=data.cryptoHoldings.map((h,i)=>{
+    const price=cryptoCache[h.id]||0;
+    const val=h.qty*price*3.6725;
+    const chg=(cryptoChangeCache[h.id]||0).toFixed(2);
+    return`<div class="holding-row">
+      <div class="holding-icon" style="background:${holdingColor(h.sym)};">${h.sym.slice(0,3)}</div>
+      <div style="flex:1;"><div class="holding-name">${h.name||h.sym}</div><div class="holding-qty">${h.qty} qty</div></div>
+      <div style="text-align:right;"><div class="holding-val">${price?fmt(val):fmt(h.costBasis||0)} ${curSym()}</div><div class="holding-chg ${parseFloat(chg)>=0?'txn-positive':'txn-negative'}">${parseFloat(chg)>=0?'+':''}${chg}%</div></div>
+      <div onclick="deleteItem('crypto',${i})" style="margin-left:8px;cursor:pointer;color:var(--text3);">✕</div>
+    </div>`;
+  }).join('');
+}
+
+function holdingColor(sym){
+  const map={BTC:'#F7A400',ETH:'#627EEA',ADA:'#0033AD',SOL:'#9945FF',BNB:'#F0B90B'};
+  return map[sym.toUpperCase()]||'var(--surface3)';
+}
+
+function renderCollectionList(){
+  const el=document.getElementById('collection-list');
+  if(!el)return;
+  const mtg=data.mtgCards.map((c,i)=>({...c,type:'MTG',origIdx:i}));
+  const poke=data.pokemonCards.map((c,i)=>({...c,type:'PKM',origIdx:i}));
+  const all=[...mtg,...poke];
+  if(!all.length){el.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No cards yet. Tap + Add.</div>';return;}
+  el.innerHTML=all.map(c=>{
+    const val=c.currentPrice||c.addedPrice||0;
+    const chg=c.addedPrice&&c.addedPrice>0?((val-c.addedPrice)/c.addedPrice*100).toFixed(1):null;
+    const img=c.imageUrl?`<img src="${c.imageUrl}" style="width:36px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">`:
+      `<div class="holding-icon" style="background:${c.type==='MTG'?'#3A2800':'#1A0028'};color:${c.type==='MTG'?'var(--yellow)':'#B57BE0'};width:36px;height:50px;border-radius:4px;">${c.type}</div>`;
+    const setLbl=c.set?`<div class="holding-qty">${c.set}</div>`:`<div class="holding-qty">${c.type} card</div>`;
+    const priceUSD=c.usdPrice?`<div style="font-size:10px;color:var(--text3);">$${c.usdPrice.toFixed(2)}</div>`:'';
+    return`<div class="holding-row" style="align-items:flex-start;">
+      ${img}
+      <div style="flex:1;min-width:0;"><div class="holding-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>${setLbl}</div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="holding-val">${fmt(val)} ${curSym()}</div>
+        ${priceUSD}
+        ${chg?`<div class="holding-chg ${parseFloat(chg)>=0?'txn-positive':'txn-negative'}">${parseFloat(chg)>=0?'+':''}${chg}%</div>`:''}
+      </div>
+      <div onclick="deleteItem('${c.type==='MTG'?'mtg':'poke'}',${c.origIdx})" style="margin-left:8px;cursor:pointer;color:var(--text3);padding:4px;">✕</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSavingsPortfolio(){
+  const el=document.getElementById('savings-list');
+  if(!el)return;
+  if(!data.savingsAccounts.length){el.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">No accounts yet</div>';return;}
+  el.innerHTML=data.savingsAccounts.map((a,i)=>`
+    <div class="holding-row">
+      <div class="holding-icon" style="background:#001A2A;color:var(--blue);">SAV</div>
+      <div style="flex:1;"><div class="holding-name">${a.name}</div><div class="holding-qty">${a.bank||'Account'}</div></div>
+      <div class="holding-val">${fmt(a.balance)} ${curSym()}</div>
+      <div onclick="deleteItem('savings',${i})" style="margin-left:8px;cursor:pointer;color:var(--text3);">✕</div>
+    </div>`).join('');
+}
+
+// ── INCOME ─────────────────────────────────────────────────────────────────
+function renderIncome(){
+  const el=document.getElementById('income-list');
+  const tot=document.getElementById('income-total');
+  if(tot)tot.textContent=fmt(totalIncome())+' '+curSym();
+  if(!el)return;
+  if(!data.incomeSources.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No income added yet</div>';return;}
+  el.innerHTML=data.incomeSources.map((s,i)=>`
+    <div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div class="txn-avatar" style="background:#1A2800;color:var(--green);">${s.name.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${s.name}</div><div style="font-size:11px;color:var(--text3);">${s.freq||'monthly'}</div></div>
+      <div style="font-size:14px;font-weight:600;color:var(--green);">+${fmt(s.amt)}</div>
+      <div onclick="deleteItem('income',${i})" class="delete-btn">✕</div>
+    </div>`).join('');
+}
+
+// ── EXPENSES ───────────────────────────────────────────────────────────────
+function renderExpenses(){
+  const el=document.getElementById('expense-list');
+  const tot=document.getElementById('exp-total');
+  const ratio=document.getElementById('exp-ratio');
+  const exp=totalExpenses(),inc=totalIncome();
+  if(tot)tot.textContent=fmt(exp)+' '+curSym();
+  if(ratio)ratio.textContent=inc>0?Math.round(exp/inc*100)+'%':'—';
+  if(!el)return;
+  if(!data.expenses.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No expenses yet</div>';return;}
+  el.innerHTML=data.expenses.map((e,i)=>`
+    <div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div class="txn-avatar" style="background:#2A0000;color:var(--red);">${e.name.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${e.name}</div><div style="font-size:11px;color:var(--text3);">${e.cat==='sub'?'Subscription':'Essential'}</div></div>
+      <div style="font-size:14px;font-weight:600;color:var(--red);">−${fmt(e.amt)}</div>
+      <div onclick="deleteItem('expense',${i})" class="delete-btn">✕</div>
+    </div>`).join('');
+}
+
+// ── SAVINGS TAB ────────────────────────────────────────────────────────────
+function renderSavingsTab(){
+  const el=document.getElementById('savings-list-full');
+  const tot=document.getElementById('sav-total');
+  if(tot)tot.textContent=fmt(totalSavings())+' '+curSym();
+  if(!el)return;
+  if(!data.savingsAccounts.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No accounts yet</div>';return;}
+  el.innerHTML=data.savingsAccounts.map((a,i)=>`
+    <div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div class="txn-avatar" style="background:#001A2A;color:var(--blue);">💰</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${a.name}</div><div style="font-size:11px;color:var(--text3);">${a.bank||'Account'}</div></div>
+      <div style="font-size:14px;font-weight:600;color:var(--blue);">${fmt(a.balance)}</div>
+      <div onclick="deleteItem('savings',${i})" class="delete-btn">✕</div>
+    </div>`).join('');
+}
+
+// ── SHEETS ─────────────────────────────────────────────────────────────────
+let currentSheet='';
+function openSheet(type){
+  currentSheet=type;
+  const overlay=document.getElementById('sheet-overlay');
+  const title=document.getElementById('sheet-title');
+  const body=document.getElementById('sheet-body');
+  overlay.classList.add('open');
+  if(type==='add-income'){
+    title.textContent='Add income source';
+    body.innerHTML=`
+      <div class="field-group"><div class="field-label">Name</div><input class="field-input" id="sh-name" placeholder="Salary, freelance..."></div>
+      <div class="field-group"><div class="field-label">Amount (AED)</div><input class="field-input" id="sh-amt" type="number" placeholder="0"></div>
+      <div class="field-group"><div class="field-label">Frequency</div>
+        <select class="select-input" id="sh-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
+      </div>
+      <button class="btn-primary" onclick="submitSheet()">Add income</button>`;
+  } else if(type==='add-expense'){
+    title.textContent='Add expense';
+    body.innerHTML=`
+      <div class="field-group"><div class="field-label">Name</div><input class="field-input" id="sh-name" placeholder="Rent, Netflix..."></div>
+      <div class="field-group"><div class="field-label">Amount (AED)</div><input class="field-input" id="sh-amt" type="number" placeholder="0"></div>
+      <div class="field-group"><div class="field-label">Category</div>
+        <select class="select-input" id="sh-cat"><option value="ess">Essential</option><option value="sub">Subscription</option></select>
+      </div>
+      <button class="btn-primary" onclick="submitSheet()">Add expense</button>`;
+  } else if(type==='add-savings'){
+    title.textContent='Add savings account';
+    body.innerHTML=`
+      <div class="field-group"><div class="field-label">Account name</div><input class="field-input" id="sh-name" placeholder="ADCB, Emirates NBD..."></div>
+      <div class="field-group"><div class="field-label">Bank</div><input class="field-input" id="sh-bank" placeholder="Bank name"></div>
+      <div class="field-group"><div class="field-label">Balance (AED)</div><input class="field-input" id="sh-bal" type="number" placeholder="0"></div>
+      <button class="btn-primary" onclick="submitSheet()">Add account</button>`;
+  } else if(type==='add-crypto'){
+    title.textContent='Add crypto holding';
+    body.innerHTML=`
+      <div class="field-group"><div class="field-label">Symbol</div>
+        <select class="select-input" id="sh-sym">
+          <option value="bitcoin" data-sym="BTC">Bitcoin (BTC)</option>
+          <option value="ethereum" data-sym="ETH">Ethereum (ETH)</option>
+          <option value="solana" data-sym="SOL">Solana (SOL)</option>
+          <option value="cardano" data-sym="ADA">Cardano (ADA)</option>
+          <option value="binancecoin" data-sym="BNB">BNB (BNB)</option>
+        </select>
+      </div>
+      <div class="field-group"><div class="field-label">Quantity</div><input class="field-input" id="sh-qty" type="number" step="any" placeholder="0.00"></div>
+      <div class="field-group"><div class="field-label">Cost basis (AED)</div><input class="field-input" id="sh-cost" type="number" placeholder="0"></div>
+      <button class="btn-primary" onclick="submitSheet()">Add holding</button>`;
+  } else if(type==='add-collection'){
+    title.textContent='Add card';
+    body.innerHTML=`
+      <!-- Type selector -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div id="ctype-mtg" onclick="switchCardType('mtg')" style="border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;border:1.5px solid var(--green);background:rgba(168,230,60,.08);transition:all .15s;">
+          <div style="width:28px;height:28px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;"><i class="ss ss-planeswalker" style="font-size:26px;color:#E05010;"></i></div>
+          <div style="font-size:11px;font-weight:600;color:var(--green);">Magic: The Gathering</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">via Scryfall</div>
+        </div>
+        <div id="ctype-poke" onclick="switchCardType('poke')" style="border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;border:1.5px solid var(--surface3);background:transparent;transition:all .15s;">
+          <div style="width:26px;height:26px;margin:0 auto 4px;"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="14" cy="14" r="13" fill="#E8E8E8" stroke="#333" stroke-width="1.5"/>
+  <rect x="1" y="12.5" width="26" height="3" fill="#333"/>
+  <rect x="2" y="12.5" width="24" height="3" fill="#333"/>
+  <path d="M1 14 Q1 1 14 1 Q27 1 27 14Z" fill="#E24B4A"/>
+  <circle cx="14" cy="14" r="4.5" fill="white" stroke="#333" stroke-width="1.5"/>
+  <circle cx="14" cy="14" r="2" fill="#E8E8E8"/>
+</svg></div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2);">Pokémon</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">via TCG API</div>
+        </div>
+      </div>
+
+      <!-- MTG form -->
+      <div id="form-mtg">
+        <div class="field-group">
+          <div class="field-label">Scryfall link or search</div>
+          <input class="field-input" id="sh-scryfall-url" placeholder="https://scryfall.com/card/..." oninput="onScryfallUrlChange()" style="margin-bottom:8px;">
+          <input class="field-input" id="sh-card-name" placeholder="Black Lotus, Mox Pearl..." oninput="debounceSearch()">
+        </div>
+        <div id="sh-search-results" style="display:none;background:var(--surface2);border-radius:12px;overflow:hidden;margin-bottom:12px;max-height:180px;overflow-y:auto;"></div>
+        <div id="sh-scryfall-preview" style="display:none;background:var(--surface2);border-radius:12px;padding:12px;margin-bottom:12px;flex-direction:row;gap:10px;align-items:flex-start;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label">Qty</div>
+            <input class="field-input" id="sh-qty" type="number" value="1" min="1">
+          </div>
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label">Paid (AED)</div>
+            <input class="field-input" id="sh-paid" type="number" placeholder="0">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="submitSheet()">Add to collection</button>
+      </div>
+
+      <!-- Pokémon form (hidden by default) -->
+      <div id="form-poke" style="display:none;">
+        <div class="field-group">
+          <div class="field-label">pokemontcg.io link or search</div>
+          <input class="field-input" id="sh-poke-url" placeholder="https://pokemontcg.io/... or card ID" oninput="onPokeUrlChange()" style="margin-bottom:8px;">
+          <input class="field-input" id="sh-poke-name" placeholder="Charizard, Pikachu, Mewtwo..." oninput="debouncePokeSearch()">
+        </div>
+        <div id="sh-poke-results" style="display:none;background:var(--surface2);border-radius:12px;overflow:hidden;margin-bottom:12px;max-height:180px;overflow-y:auto;"></div>
+        <div id="sh-poke-preview" style="display:none;background:var(--surface2);border-radius:12px;padding:12px;margin-bottom:12px;flex-direction:row;gap:10px;align-items:flex-start;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label">Qty</div>
+            <input class="field-input" id="sh-poke-qty" type="number" value="1" min="1">
+          </div>
+          <div class="field-group" style="margin-bottom:0;">
+            <div class="field-label">Paid (AED)</div>
+            <input class="field-input" id="sh-poke-paid" type="number" placeholder="0">
+          </div>
+        </div>
+        <button class="btn-primary" style="background:var(--yellow);color:var(--yellow-dark);" onclick="submitPokemon()">Add to collection</button>
+      </div>
+    `;
+  }
+  setTimeout(()=>{const fi=body.querySelector('input');if(fi)fi.focus();},200);
+}
+
+function closeSheet(e){
+  if(e&&e.target!==document.getElementById('sheet-overlay'))return;
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+
+function submitSheet(){
+  const g=id=>document.getElementById(id);
+  const gv=id=>{const e=g(id);return e?e.value.trim():'';}
+  const gn=id=>{const e=g(id);return e?parseFloat(e.value)||0:0;}
+  if(currentSheet==='add-income'){
+    const name=gv('sh-name'),amt=gn('sh-amt'),freq=gv('sh-freq');
+    if(!name||!amt)return;
+    data.incomeSources.push({name,amt,freq});
+  } else if(currentSheet==='add-expense'){
+    const name=gv('sh-name'),amt=gn('sh-amt'),cat=gv('sh-cat');
+    if(!name||!amt)return;
+    data.expenses.push({name,amt,cat});
+  } else if(currentSheet==='add-savings'){
+    const name=gv('sh-name'),bank=gv('sh-bank'),balance=gn('sh-bal');
+    if(!name||!balance)return;
+    data.savingsAccounts.push({name,bank,balance});
+  } else if(currentSheet==='add-crypto'){
+    const sel=g('sh-sym');
+    const id=gv('sh-sym'),sym=sel?sel.options[sel.selectedIndex].dataset.sym:'BTC';
+    const qty=gn('sh-qty'),cost=gn('sh-cost');
+    if(!qty)return;
+    data.cryptoHoldings.push({id,sym,name:sel?sel.options[sel.selectedIndex].text.split(' ')[0]:'',qty,costBasis:cost});
+    fetchCryptoPrices();
+  } else if(currentSheet==='add-collection'){
+    // Use selectedScryfallCard if set
+    const card=selectedScryfallCard;
+    if(!card||!card.name){showPriceStatus('Select a card first');return;}
+    const qty=Math.max(1,parseInt(document.getElementById('sh-qty')?.value)||1);
+    const paid=parseFloat(document.getElementById('sh-paid')?.value)||0;
+    for(let i=0;i<qty;i++){
+      data.mtgCards.push({
+        name:card.name,
+        set:card.set_name||'',
+        scryfallId:card.id||'',
+        imageUrl:card.image_uris?.small||card.card_faces?.[0]?.image_uris?.small||'',
+        addedPrice:paid,
+        currentPrice:card.priceAED||0,
+        usdPrice:card.priceUSD||0,
+        scryfallUri:card.scryfall_uri||'',
+      });
+    }
+    selectedScryfallCard=null;
+  }
+  save();
+  document.getElementById('sheet-overlay').classList.remove('open');
+  renderTab(currentTab);
+  renderHome();
+}
+
+function deleteItem(type,idx){
+  if(type==='income')data.incomeSources.splice(idx,1);
+  else if(type==='expense')data.expenses.splice(idx,1);
+  else if(type==='savings')data.savingsAccounts.splice(idx,1);
+  else if(type==='crypto')data.cryptoHoldings.splice(idx,1);
+  else if(type==='mtg')data.mtgCards.splice(idx,1);
+  else if(type==='poke')data.pokemonCards.splice(idx,1);
+  save();renderTab(currentTab);renderHome();
+}
+
+// ── Currency toggle ────────────────────────────────────────────────────────
+document.getElementById('currency-toggle').addEventListener('click',()=>{
+  const idx=CURRENCIES.indexOf(data.currency);
+  data.currency=CURRENCIES[(idx+1)%CURRENCIES.length];
+  save();updateCurrencyToggle();renderAll();renderTab(currentTab);
+});
+
+// ── Range toggle ───────────────────────────────────────────────────────────
+function setRange(el,range){
+  currentRange=range;
+  document.querySelectorAll('#screen-portfolio .toggle-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  drawSparkline();
+}
+
+
+
+// ── Pokémon TCG API (pokemontcg.io) ───────────────────────────────────────
+let selectedPokeCard=null;
+let pokeSearchTimer=null;
+const POKE_API='https://api.pokemontcg.io/v2';
+
+
+function switchCardType(type){
+  const mtgBtn=document.getElementById('ctype-mtg');
+  const pokeBtn=document.getElementById('ctype-poke');
+  const mtgForm=document.getElementById('form-mtg');
+  const pokeForm=document.getElementById('form-poke');
+  if(type==='mtg'){
+    mtgBtn.style.borderColor='var(--green)';mtgBtn.style.background='rgba(168,230,60,.08)';
+    mtgBtn.querySelector('div:nth-child(2)').style.color='var(--green)';
+    pokeBtn.style.borderColor='var(--surface3)';pokeBtn.style.background='transparent';
+    pokeBtn.querySelector('div:nth-child(2)').style.color='var(--text2)';
+    if(mtgForm)mtgForm.style.display='block';
+    if(pokeForm)pokeForm.style.display='none';
+  } else {
+    pokeBtn.style.borderColor='var(--yellow)';pokeBtn.style.background='rgba(232,216,0,.08)';
+    pokeBtn.querySelector('div:nth-child(2)').style.color='var(--yellow)';
+    mtgBtn.style.borderColor='var(--surface3)';mtgBtn.style.background='transparent';
+    mtgBtn.querySelector('div:nth-child(2)').style.color='var(--text2)';
+    if(mtgForm)mtgForm.style.display='none';
+    if(pokeForm)pokeForm.style.display='block';
+  }
+}
+
+function debouncePokeSearch(){
+  clearTimeout(pokeSearchTimer);
+  pokeSearchTimer=setTimeout(pokeSearch,500);
+}
+
+function onPokeUrlChange(){
+  const url=(document.getElementById('sh-poke-url')||{}).value||'';
+  // pokemontcg.io card URLs: https://pokemontcg.io/cards/base1-4
+  // or direct card page links like https://www.tcgplayer.com/...
+  // We extract card ID patterns like base1-4, xy7-54, swsh12-183
+  const m=url.match(/([a-z0-9]+[0-9]-[a-zA-Z0-9]+)/i);
+  if(m) fetchPokeById(m[1]);
+}
+
+async function fetchPokeById(cardId){
+  const preview=document.getElementById('sh-poke-preview');
+  if(preview){preview.style.display='flex';preview.innerHTML='<span style="color:var(--text3);font-size:12px;">Looking up card...</span>';}
+  try{
+    const r=await fetch(POKE_API+'/cards/'+cardId);
+    if(!r.ok) throw new Error('not found');
+    const d=await r.json();
+    if(d.data) displayPokeCard(d.data);
+    else throw new Error('no data');
+  }catch(e){
+    if(preview) preview.innerHTML='<span style="color:var(--red);font-size:12px;">Card not found. Check the ID.</span>';
+  }
+}
+
+async function pokeSearch(){
+  const inp=document.getElementById('sh-poke-name');
+  const q=inp?inp.value.trim():'';
+  const results=document.getElementById('sh-poke-results');
+  if(!q||q.length<2){if(results)results.style.display='none';return;}
+  if(results){results.style.display='block';results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);">Searching...</div>';}
+  try{
+    const r=await fetch(POKE_API+'/cards?q=name:'+encodeURIComponent(q+'*')+'&orderBy=-set.releaseDate&pageSize=8&select=id,name,set,number,images,rarity,tcgplayer');
+    const d=await r.json();
+    if(!d.data||!d.data.length){
+      if(results)results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);">No cards found</div>';
+      return;
+    }
+    window._pokeResults=d.data;
+    if(results){
+      results.innerHTML=d.data.map(function(card,i){
+        const price=card.tcgplayer&&card.tcgplayer.prices?getBestPokePrice(card.tcgplayer.prices):0;
+        const img=card.images?card.images.small:'';
+        return '<div onclick="selectPokeCard('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:0.5px solid rgba(255,255,255,.05);cursor:pointer;">'
+          +(img?'<img src="'+img+'" style="width:28px;height:39px;object-fit:cover;border-radius:3px;flex-shrink:0;" loading="lazy">'
+               :'<div style="width:28px;height:39px;background:var(--surface3);border-radius:3px;flex-shrink:0;"></div>')
+          +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+card.name+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+(card.set?card.set.name:'')+' · #'+(card.number||'')+'</div>'
+          +'</div>'
+          +'<div style="font-size:12px;font-weight:500;color:var(--yellow);flex-shrink:0;">'+(price?'$'+price.toFixed(2):'—')+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }catch(e){
+    if(results)results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--red);">Search failed. Check connection.</div>';
+  }
+}
+
+function getBestPokePrice(prices){
+  // Try prices in order of preference
+  var keys=['holofoil','reverseHolofoil','normal','1stEditionHolofoil','unlimitedHolofoil'];
+  for(var i=0;i<keys.length;i++){
+    var p=prices[keys[i]];
+    if(p&&p.market) return p.market;
+    if(p&&p.mid) return p.mid;
+  }
+  // fallback: any price type
+  var k=Object.keys(prices)[0];
+  if(k&&prices[k]){
+    return prices[k].market||prices[k].mid||0;
+  }
+  return 0;
+}
+
+function getBestPriceType(prices){
+  var keys=['holofoil','reverseHolofoil','normal','1stEditionHolofoil'];
+  for(var i=0;i<keys.length;i++){
+    if(prices[keys[i]]&&(prices[keys[i]].market||prices[keys[i]].mid)) return keys[i];
+  }
+  return Object.keys(prices)[0]||'';
+}
+
+function selectPokeCard(idx){
+  const card=(window._pokeResults||[])[idx];
+  if(!card)return;
+  const results=document.getElementById('sh-poke-results');
+  if(results)results.style.display='none';
+  // Fetch full card data with prices
+  fetchPokeFullCard(card.id);
+}
+
+async function fetchPokeFullCard(cardId){
+  const preview=document.getElementById('sh-poke-preview');
+  if(preview){preview.style.display='flex';preview.innerHTML='<span style="color:var(--text3);font-size:12px;">Loading card...</span>';}
+  try{
+    const r=await fetch(POKE_API+'/cards/'+cardId);
+    if(!r.ok) throw new Error('not found');
+    const d=await r.json();
+    if(d.data) displayPokeCard(d.data);
+  }catch(e){
+    if(preview) preview.innerHTML='<span style="color:var(--red);font-size:12px;">Failed to load card details.</span>';
+  }
+}
+
+function displayPokeCard(card){
+  const priceUSD=card.tcgplayer&&card.tcgplayer.prices?getBestPokePrice(card.tcgplayer.prices):0;
+  const priceType=card.tcgplayer&&card.tcgplayer.prices?getBestPriceType(card.tcgplayer.prices):'';
+  const priceAED=priceUSD*USD_AED;
+  card.priceUSD=priceUSD; card.priceAED=priceAED;
+  selectedPokeCard=card;
+
+  const img=card.images?card.images.small:'';
+  const imgLg=card.images?card.images.large:'';
+  const setName=card.set?card.set.name:'';
+  const preview=document.getElementById('sh-poke-preview');
+  if(preview){
+    preview.style.display='flex';
+    preview.innerHTML=(img?'<img src="'+img+'" style="width:52px;height:72px;object-fit:cover;border-radius:5px;flex-shrink:0;">'+'':'')
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">'+card.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:2px;">'+setName+(card.number?' · #'+card.number:'')+'</div>'
+      +(card.rarity?'<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">'+card.rarity+'</div>':'')
+      +'<div style="display:flex;gap:14px;">'
+      +'<div><div style="font-size:10px;color:var(--text3);">'+(priceType||'Market')+'</div>'
+      +'<div style="font-size:15px;font-weight:600;color:var(--yellow);">'+(priceUSD?'$'+priceUSD.toFixed(2):'—')+'</div></div>'
+      +'<div><div style="font-size:10px;color:var(--text3);">AED</div>'
+      +'<div style="font-size:15px;font-weight:600;color:var(--green);">'+(priceAED?priceAED.toFixed(0):'—')+'</div></div>'
+      +'</div>'
+      +(priceAED?'<button onclick="prefillPokePrice()" style="background:rgba(168,230,60,.12);color:var(--green);border:none;border-radius:8px;padding:5px 10px;font-size:11px;margin-top:8px;cursor:pointer;font-family:DM Sans,sans-serif;">Use market price</button>':'')
+      +'</div>';
+  }
+  const paidInput=document.getElementById('sh-poke-paid');
+  if(paidInput&&priceAED&&!paidInput.value) paidInput.value=priceAED.toFixed(0);
+}
+
+function prefillPokePrice(){
+  if(!selectedPokeCard)return;
+  const el=document.getElementById('sh-poke-paid');
+  if(el) el.value=(selectedPokeCard.priceAED||0).toFixed(0);
+}
+
+async function refreshPokePrices(){
+  if(!data.pokemonCards.length)return;
+  showPriceStatus('Refreshing Pokémon prices...');
+  let updated=0;
+  for(let i=0;i<data.pokemonCards.length;i++){
+    const card=data.pokemonCards[i];
+    if(!card.pokeTcgId)continue;
+    try{
+      const r=await fetch(POKE_API+'/cards/'+card.pokeTcgId+'?select=id,tcgplayer');
+      if(!r.ok)continue;
+      const d=await r.json();
+      if(!d.data||!d.data.tcgplayer||!d.data.tcgplayer.prices)continue;
+      const usd=getBestPokePrice(d.data.tcgplayer.prices);
+      card.usdPrice=usd;
+      card.currentPrice=usd*USD_AED;
+      updated++;
+      await new Promise(function(res){setTimeout(res,120);});
+    }catch(e){}
+  }
+  if(updated>0){save();if(currentTab==='portfolio')renderPortfolio();}
+  showPriceStatus(updated>0?(updated+' Pokémon prices updated'):'No TCG IDs found');
+  setTimeout(function(){showPriceStatus('');},3000);
+}
+
+
+// ── Scryfall MTG card search ───────────────────────────────────────────────
+let selectedScryfallCard=null;
+let searchDebounceTimer=null;
+const USD_AED=3.6725;
+
+function debounceSearch(){
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer=setTimeout(scryfallSearch,500);
+}
+
+function onScryfallUrlChange(){
+  const url=(document.getElementById('sh-scryfall-url')||{}).value||'';
+  if(!url.includes('scryfall.com/card/'))return;
+  fetchScryfallByUrl(url.trim());
+}
+
+async function fetchScryfallByUrl(url){
+  const preview=document.getElementById('sh-scryfall-preview');
+  if(preview){preview.style.display='flex';preview.innerHTML='<span style="color:var(--text3);font-size:12px;">Looking up card...</span>';}
+  try{
+    const m=url.match(/scryfall\.com\/card\/([a-zA-Z0-9]+)\/([^/?#]+)/);
+    let apiUrl;
+    if(m){apiUrl='https://api.scryfall.com/cards/'+m[1]+'/'+m[2];}
+    else{
+      const uid=url.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+      if(uid)apiUrl='https://api.scryfall.com/cards/'+uid[0];
+    }
+    if(!apiUrl)throw new Error('bad url');
+    const r=await fetch(apiUrl);
+    if(!r.ok)throw new Error('not found');
+    const card=await r.json();
+    displayScryfallCard(card);
+  }catch(e){
+    if(preview)preview.innerHTML='<span style="color:var(--red);font-size:12px;">Card not found. Check the URL.</span>';
+  }
+}
+
+async function scryfallSearch(){
+  const inp=document.getElementById('sh-card-name');
+  const q=inp?inp.value.trim():'';
+  const results=document.getElementById('sh-search-results');
+  if(!q||q.length<2){if(results)results.style.display='none';return;}
+  if(results){results.style.display='block';results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);">Searching...</div>';}
+  try{
+    const r=await fetch('https://api.scryfall.com/cards/search?q='+encodeURIComponent(q)+'&order=usd&dir=desc&unique=prints');
+    const d=await r.json();
+    if(!d.data||!d.data.length){if(results)results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);">No cards found</div>';return;}
+    window._scryfallResults=d.data.slice(0,8);
+    if(results){
+      results.innerHTML=d.data.slice(0,8).map(function(card,i){
+        const price=card.prices&&card.prices.usd?parseFloat(card.prices.usd):0;
+        const img=card.image_uris?card.image_uris.small:(card.card_faces&&card.card_faces[0].image_uris?card.card_faces[0].image_uris.small:'');
+        return '<div onclick="selectScryfallCard('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:0.5px solid rgba(255,255,255,.05);cursor:pointer;">'
+          +(img?'<img src="'+img+'" style="width:28px;height:39px;object-fit:cover;border-radius:3px;flex-shrink:0;" loading="lazy">'
+               :'<div style="width:28px;height:39px;background:var(--surface3);border-radius:3px;flex-shrink:0;"></div>')
+          +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+card.name+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+(card.set_name||'')+' · '+(card.collector_number||'')+'</div></div>'
+          +'<div style="font-size:12px;font-weight:500;color:var(--yellow);flex-shrink:0;">'+(price?'$'+price.toFixed(2):'—')+'</div></div>';
+      }).join('');
+    }
+  }catch(e){
+    if(results)results.innerHTML='<div style="padding:12px;font-size:12px;color:var(--red);">Search failed. Check connection.</div>';
+  }
+}
+
+function selectScryfallCard(idx){
+  const card=(window._scryfallResults||[])[idx];
+  if(!card)return;
+  const results=document.getElementById('sh-search-results');
+  if(results)results.style.display='none';
+  displayScryfallCard(card);
+}
+
+function displayScryfallCard(card){
+  const priceUSD=card.prices&&card.prices.usd?parseFloat(card.prices.usd):(card.prices&&card.prices.usd_foil?parseFloat(card.prices.usd_foil):0);
+  const priceAED=priceUSD*USD_AED;
+  card.priceUSD=priceUSD;card.priceAED=priceAED;
+  selectedScryfallCard=card;
+  const img=card.image_uris?card.image_uris.small:(card.card_faces&&card.card_faces[0].image_uris?card.card_faces[0].image_uris.small:'');
+  const preview=document.getElementById('sh-scryfall-preview');
+  if(preview){
+    preview.style.display='flex';
+    preview.innerHTML=(img?'<img src="'+img+'" style="width:52px;height:72px;object-fit:cover;border-radius:5px;flex-shrink:0;">':'')
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">'+card.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">'+(card.set_name||'')+'</div>'
+      +'<div style="display:flex;gap:14px;">'
+      +'<div><div style="font-size:10px;color:var(--text3);">Market</div><div style="font-size:15px;font-weight:600;color:var(--yellow);">'+(priceUSD?'$'+priceUSD.toFixed(2):'—')+'</div></div>'
+      +'<div><div style="font-size:10px;color:var(--text3);">AED</div><div style="font-size:15px;font-weight:600;color:var(--green);">'+(priceAED?priceAED.toFixed(0):'—')+'</div></div>'
+      +'</div>'
+      +(priceAED?'<button onclick="prefillPrice()" style="background:rgba(168,230,60,.12);color:var(--green);border:none;border-radius:8px;padding:5px 10px;font-size:11px;margin-top:8px;cursor:pointer;font-family:DM Sans,sans-serif;">Use market price</button>':'')
+      +'</div>';
+  }
+  const paidInput=document.getElementById('sh-paid');
+  if(paidInput&&priceAED&&!paidInput.value)paidInput.value=priceAED.toFixed(0);
+}
+
+function prefillPrice(){
+  if(!selectedScryfallCard)return;
+  const el=document.getElementById('sh-paid');
+  if(el)el.value=(selectedScryfallCard.priceAED||0).toFixed(0);
+}
+
+function submitPokemon(){
+  const card=selectedPokeCard;
+  if(!card||!card.name){
+    // fallback: manual entry
+    const name=(document.getElementById('sh-poke-name')||{}).value||'';
+    if(!name.trim())return;
+    const paid=parseFloat((document.getElementById('sh-poke-paid')||{}).value)||0;
+    data.pokemonCards.push({name:name.trim(),addedPrice:paid,currentPrice:paid});
+  } else {
+    const qty=Math.max(1,parseInt((document.getElementById('sh-poke-qty')||{}).value)||1);
+    const paid=parseFloat((document.getElementById('sh-poke-paid')||{}).value)||0;
+    for(let i=0;i<qty;i++){
+      data.pokemonCards.push({
+        name:card.name,
+        set:card.set?card.set.name:'',
+        number:card.number||'',
+        pokeTcgId:card.id||'',
+        imageUrl:card.images?card.images.small:'',
+        imageUrlLarge:card.images?card.images.large:'',
+        addedPrice:paid,
+        currentPrice:card.priceAED||0,
+        usdPrice:card.priceUSD||0,
+        rarity:card.rarity||'',
+      });
+    }
+    selectedPokeCard=null;
+  }
+  save();
+  document.getElementById('sheet-overlay').classList.remove('open');
+  renderTab(currentTab);renderHome();
+}
+
+async function refreshAllCardPrices(){
+  await refreshMTGPrices();
+  await refreshPokePrices();
+}
+
+async function refreshMTGPrices(){
+  if(!data.mtgCards.length)return;
+  showPriceStatus('Refreshing MTG prices...');
+  let updated=0;
+  for(let i=0;i<data.mtgCards.length;i++){
+    const card=data.mtgCards[i];
+    if(!card.scryfallId)continue;
+    try{
+      const r=await fetch('https://api.scryfall.com/cards/'+card.scryfallId);
+      if(!r.ok)continue;
+      const d=await r.json();
+      const usd=d.prices&&d.prices.usd?parseFloat(d.prices.usd):(card.usdPrice||0);
+      card.usdPrice=usd;card.currentPrice=usd*USD_AED;
+      updated++;
+      await new Promise(function(res){setTimeout(res,100);});
+    }catch(e){}
+  }
+  if(updated>0){save();if(currentTab==='portfolio')renderPortfolio();}
+  showPriceStatus(updated>0?(updated+' MTG prices updated'):'No Scryfall IDs found');
+  setTimeout(function(){showPriceStatus('');},3000);
+}
+
+
+// ── Crypto prices ──────────────────────────────────────────────────────────
+async function fetchCryptoPrices(){
+  if(!data.cryptoHoldings.length)return;
+  showPriceStatus('Fetching prices…');
+  const ids=data.cryptoHoldings.map(h=>h.id).join(',');
+  // Try multiple endpoints in order
+  const endpoints=[
+    `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+    `https://api.coincap.io/v2/assets?ids=${ids}`,
+  ];
+  for(let i=0;i<endpoints.length;i++){
+    try{
+      const headers=i===0?{'x-cg-demo-api-key':'CG-demo'}:{};
+      const r=await fetch(endpoints[i],{headers});
+      if(!r.ok)continue;
+      const d=await r.json();
+      if(i===0){
+        // CoinGecko format: {bitcoin:{usd:60000,usd_24h_change:2.5}}
+        if(!d||typeof d!=='object'||Object.keys(d).length===0)continue;
+        let found=0;
+        Object.keys(d).forEach(k=>{
+          if(d[k]&&d[k].usd){
+            cryptoCache[k]=d[k].usd;
+            cryptoChangeCache[k]=d[k].usd_24h_change||0;
+            found++;
+          }
+        });
+        if(found===0)continue;
+      } else {
+        // CoinCap format: {data:[{id:'bitcoin',priceUsd:'60000'}]}
+        if(!d.data)continue;
+        d.data.forEach(a=>{
+          cryptoCache[a.id]=parseFloat(a.priceUsd)||0;
+          cryptoChangeCache[a.id]=parseFloat(a.changePercent24Hr)||0;
+        });
+      }
+      showPriceStatus('Prices updated');
+      setTimeout(()=>showPriceStatus(''),3000);
+      if(currentTab==='portfolio')renderPortfolio();
+      renderHome();
+      return;
+    }catch(e){}
+  }
+  // Final fallback: use hardcoded recent approximate prices
+  const fallback={bitcoin:98000,ethereum:3400,solana:180,cardano:0.45,binancecoin:620};
+  let usedFallback=false;
+  data.cryptoHoldings.forEach(h=>{
+    if(!cryptoCache[h.id]&&fallback[h.id]){cryptoCache[h.id]=fallback[h.id];usedFallback=true;}
+  });
+  if(usedFallback){
+    showPriceStatus('Using cached prices');
+    setTimeout(()=>showPriceStatus(''),4000);
+    if(currentTab==='portfolio')renderPortfolio();
+    renderHome();
+  } else {
+    showPriceStatus('Price fetch failed');
+    setTimeout(()=>showPriceStatus(''),4000);
+  }
+}
+
+function showPriceStatus(msg){
+  let el=document.getElementById('price-status');
+  if(!el){
+    el=document.createElement('div');
+    el.id='price-status';
+    el.style.cssText='position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text2);font-size:11px;padding:6px 14px;border-radius:20px;white-space:nowrap;transition:opacity .3s;z-index:40;';
+    document.getElementById('app').appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.opacity=msg?'1':'0';
+}
+
+// ── Clock ──────────────────────────────────────────────────────────────────
+function updateClock(){
+  const el=document.getElementById('status-time');
+  if(el){const n=new Date();el.textContent=n.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:false});}
+}
+setInterval(updateClock,30000);updateClock();
+setInterval(fetchCryptoPrices,60000);
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+load();
+</script>
+</body>
+</html>
